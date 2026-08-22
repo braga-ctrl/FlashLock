@@ -9,6 +9,16 @@ public static class ProtectionVerifier
     private static readonly SecurityIdentifier AdministratorsSid = new(WellKnownSidType.BuiltinAdministratorsSid, null);
     private static readonly SecurityIdentifier EveryoneSid = new(WellKnownSidType.WorldSid, null);
 
+    private const FileSystemRights ForbiddenNormalUserRights =
+        FileSystemRights.WriteData |
+        FileSystemRights.AppendData |
+        FileSystemRights.WriteExtendedAttributes |
+        FileSystemRights.DeleteSubdirectoriesAndFiles |
+        FileSystemRights.WriteAttributes |
+        FileSystemRights.Delete |
+        FileSystemRights.ChangePermissions |
+        FileSystemRights.TakeOwnership;
+
     public static void VerifyProtected(string path, bool isDirectory)
     {
         FileSystemSecurity security = isDirectory
@@ -47,6 +57,9 @@ public static class ProtectionVerifier
         }
     }
 
+    public static bool ContainsForbiddenNormalUserRights(FileSystemRights rights) =>
+        (rights & ForbiddenNormalUserRights) != 0;
+
     private static void VerifyFullControl(IReadOnlyList<FileSystemAccessRule> rules, SecurityIdentifier sid, string path)
     {
         var matching = rules.Where(rule => rule.IdentityReference.Equals(sid)).ToList();
@@ -65,14 +78,7 @@ public static class ProtectionVerifier
         }
 
         var rights = matching[0].FileSystemRights;
-        var forbidden = FileSystemRights.Write
-            | FileSystemRights.Modify
-            | FileSystemRights.Delete
-            | FileSystemRights.DeleteSubdirectoriesAndFiles
-            | FileSystemRights.ChangePermissions
-            | FileSystemRights.TakeOwnership;
-
-        if ((rights & FileSystemRights.ReadAndExecute) != FileSystemRights.ReadAndExecute || (rights & forbidden) != 0)
+        if ((rights & FileSystemRights.ReadAndExecute) != FileSystemRights.ReadAndExecute || ContainsForbiddenNormalUserRights(rights))
         {
             throw new InvalidOperationException($"Protection verification found write-capable Everyone permissions: {path}");
         }

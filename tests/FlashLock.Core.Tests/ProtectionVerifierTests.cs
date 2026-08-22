@@ -6,17 +6,22 @@ namespace FlashLock.Core.Tests;
 public sealed class ProtectionVerifierTests
 {
     [Fact]
-    public void ProtectedProfile_BlocksEveryoneWriteRights()
+    public void ReadAndExecute_DoesNotCountAsForbiddenWriteAccess()
     {
-        var rights = FileSystemRights.ReadAndExecute;
-        var forbidden = FileSystemRights.Write
-            | FileSystemRights.Modify
-            | FileSystemRights.Delete
-            | FileSystemRights.DeleteSubdirectoriesAndFiles
-            | FileSystemRights.ChangePermissions
-            | FileSystemRights.TakeOwnership;
+        Assert.False(ProtectionVerifier.ContainsForbiddenNormalUserRights(FileSystemRights.ReadAndExecute));
+    }
 
-        Assert.Equal(FileSystemRights.ReadAndExecute, rights & FileSystemRights.ReadAndExecute);
-        Assert.Equal((FileSystemRights)0, rights & forbidden);
+    [Theory]
+    [InlineData(FileSystemRights.WriteData)]
+    [InlineData(FileSystemRights.AppendData)]
+    [InlineData(FileSystemRights.WriteExtendedAttributes)]
+    [InlineData(FileSystemRights.WriteAttributes)]
+    [InlineData(FileSystemRights.Delete)]
+    [InlineData(FileSystemRights.DeleteSubdirectoriesAndFiles)]
+    [InlineData(FileSystemRights.ChangePermissions)]
+    [InlineData(FileSystemRights.TakeOwnership)]
+    public void MutatingRights_AreForbidden(FileSystemRights rights)
+    {
+        Assert.True(ProtectionVerifier.ContainsForbiddenNormalUserRights(rights));
     }
 }
