@@ -6,7 +6,8 @@ public sealed record PortableDriveInfo(
     DriveType DriveType,
     string? VolumeLabel,
     long TotalSize,
-    long AvailableFreeSpace)
+    long AvailableFreeSpace,
+    string VolumeSerialNumber)
 {
     public bool SupportsPortableAclProtection =>
         string.Equals(FileSystem, "NTFS", StringComparison.OrdinalIgnoreCase);
