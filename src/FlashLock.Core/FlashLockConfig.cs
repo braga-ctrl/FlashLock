@@ -4,8 +4,14 @@ public sealed record FlashLockConfig(
     int SchemaVersion,
     DateTimeOffset CreatedAtUtc,
     PinHash OwnerPin,
-    string ProtectionMode,
-    string? OriginalRootSddl)
+    ProtectionState State,
+    string VolumeSerialNumber,
+    string SnapshotFileName,
+    DateTimeOffset? ProtectedAtUtc,
+    DateTimeOffset? LastUnlockedAtUtc,
+    int FailedPinAttempts,
+    DateTimeOffset? PinLockoutUntilUtc)
 {
-    public const int CurrentSchemaVersion = 1;
+    public const int CurrentSchemaVersion = 2;
+    public const string DefaultSnapshotFileName = "acl-snapshot.jsonl";
 }

@@ -6,7 +6,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  build-test:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,3 +17,5 @@ jobs:
         run: dotnet restore FlashLock.sln
       - name: Build
         run: dotnet build FlashLock.sln -c Release --no-restore
+      - name: Test
+        run: dotnet test tests/FlashLock.Core.Tests/FlashLock.Core.Tests.csproj -c Release --no-build --verbosity normal

@@ -1,0 +1,39 @@
+name: portable-release
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Test
+        run: dotnet test FlashLock.sln -c Release
+      - name: Publish app
+        run: dotnet publish src/FlashLock.App/FlashLock.App.csproj -c Release -r win-x64 --self-contained true -o out/portable
+      - name: Publish elevated helper
+        run: dotnet publish src/FlashLock.Elevated/FlashLock.Elevated.csproj -c Release -r win-x64 --self-contained true -o out/helper
+      - name: Assemble portable folder
+        shell: pwsh
+        run: |
+          Copy-Item out/helper/FlashLock.Elevated.exe out/portable/FlashLock.Elevated.exe -Force
+          @'
+          FlashLock Portable v0.1
+
+          1. Copy this folder's contents to the ROOT of an NTFS USB drive.
+          2. Run FlashLock.exe from that USB.
+          3. Use Set up & protect; approve the UAC prompt.
+
+          Do not use the first prototype on irreplaceable data until the manual validation checklist passes.
+          '@ | Set-Content out/portable/READ-ME-FIRST.txt
+          Compress-Archive -Path out/portable/* -DestinationPath FlashLock-win-x64.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FlashLock-win-x64
+          path: FlashLock-win-x64.zip

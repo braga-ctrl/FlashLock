@@ -8,9 +8,7 @@ public enum ProtectionCompatibilityStatus
     NotReady
 }
 
-public sealed record ProtectionCompatibilityResult(
-    ProtectionCompatibilityStatus Status,
-    string Message)
+public sealed record ProtectionCompatibilityResult(ProtectionCompatibilityStatus Status, string Message)
 {
     public bool CanProtect => Status == ProtectionCompatibilityStatus.Supported;
 }
@@ -36,6 +34,6 @@ public static class ProtectionCompatibility
 
         return new(
             ProtectionCompatibilityStatus.Supported,
-            "This volume supports the planned portable NTFS protection profile.");
+            "NTFS portable protection is available for this volume.");
     }
 }

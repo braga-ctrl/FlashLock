@@ -1,0 +1,41 @@
+<Window x:Class="FlashLock.App.PinDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Owner PIN"
+        Width="420"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterOwner">
+    <Grid Margin="28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock x:Name="HeadingText" Text="Enter owner PIN" FontSize="22" FontWeight="SemiBold" />
+            <TextBlock x:Name="DescriptionText" Margin="0,6,0,0" TextWrapping="Wrap" Opacity="0.7"
+                       Text="This PIN authorizes changing the USB protection state." />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,20,0,0">
+            <TextBlock Text="PIN / passphrase" />
+            <PasswordBox x:Name="PinBox" Margin="0,6,0,0" MinHeight="34" />
+        </StackPanel>
+
+        <StackPanel x:Name="ConfirmPanel" Grid.Row="2" Margin="0,14,0,0" Visibility="Collapsed">
+            <TextBlock Text="Confirm PIN / passphrase" />
+            <PasswordBox x:Name="ConfirmPinBox" Margin="0,6,0,0" MinHeight="34" />
+        </StackPanel>
+
+        <TextBlock x:Name="ErrorText" Grid.Row="3" Margin="0,12,0,0" TextWrapping="Wrap" />
+
+        <StackPanel Grid.Row="4" Margin="0,22,0,0" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Width="92" Height="36" Margin="0,0,10,0" Content="Cancel" IsCancel="True" />
+            <Button Width="92" Height="36" Content="Continue" IsDefault="True" Click="Continue_Click" />
+        </StackPanel>
+    </Grid>
+</Window>

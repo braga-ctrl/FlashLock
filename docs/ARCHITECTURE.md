@@ -4,83 +4,113 @@
 
 ### FlashLock.App
 
-Portable WPF UI. Runs with normal user privileges so simply opening FlashLock does not trigger UAC.
+Portable WPF UI running with the normal user token.
 
 Responsibilities:
 
-- Determine the drive containing the running executable.
-- Display volume identity, filesystem, and status.
-- Owner setup and PIN entry.
-- Request privileged state changes.
-- Explain unsupported/recovery states.
+- identify the volume containing the running executable
+- display filesystem, capacity, volume serial, compatibility and state
+- first-run owner PIN capture and PIN entry
+- launch the privileged helper through UAC
+- exchange one request/response over a random named pipe
+- surface Protected / Unlocked / Unsupported / Recovery Required states
+
+No PIN is placed on the process command line.
 
 ### FlashLock.Core
 
-Pure application/domain logic:
+Shared domain/security implementation:
 
-- portable drive location
-- filesystem compatibility
-- PIN hashing/verification
-- configuration schema
-- protection-state model
-- future ACL plan generation and verification
+- volume identity and safety guardrails
+- NTFS compatibility checks
+- PBKDF2 PIN verification and temporary failed-attempt lockout
+- configuration state machine
+- ACL snapshot capture / exact DACL restoration
+- protected ACL application and read-back verification
+- automatic rollback on failed protection
 
-### FlashLock.Elevated (planned)
+### FlashLock.Elevated
 
-Small privileged helper launched only for Protect/Unlock/Repair operations.
+Minimal console helper whose manifest requires Administrator privileges.
 
 Responsibilities:
 
-- Re-identify the target volume independently.
-- Verify target is not the system volume.
-- Verify expected FlashLock metadata/volume identity.
-- Back up the current root security descriptor before first protection.
-- Apply the protected DACL.
-- Restore the saved DACL during unlock.
-- Verify postcondition before reporting success.
+- receive the request from the already-created named pipe
+- independently verify that its own executable resides on the requested target drive
+- reject the Windows system volume and non-NTFS volumes
+- re-check the expected volume serial
+- run Protect / Unlock / Recover through `ProtectionEngine`
+- return only status/result data to the UI
 
 ## State machine
 
 ```text
-UNINITIALIZED
+NOT_CONFIGURED
     |
-    | owner setup + PIN
+    | create PIN + Protect
     v
-UNLOCKED
+APPLYING
+    |------------------------.
+    | verified               | exception / interrupted
+    v                        v
+PROTECTED             RECOVERY_REQUIRED
+    |                        |
+    | Unlock + PIN           | Recover + PIN
+    v                        |
+RESTORING <------------------'
+    |------------------------.
+    | exact restore verified | failure
+    v                        v
+UNLOCKED               RECOVERY_REQUIRED
     |
-    | Protect + UAC
-    v
-TRANSITIONING_TO_PROTECTED
-    |                  |
-    | verified         | failed/ambiguous
-    v                  v
-PROTECTED        RECOVERY_REQUIRED
-    |
-    | Unlock + PIN + UAC
-    v
-TRANSITIONING_TO_UNLOCKED
-    |                  |
-    | restored         | failed/ambiguous
-    v                  v
-UNLOCKED         RECOVERY_REQUIRED
+    | Protect + PIN
+    '-----------------------> APPLYING
 ```
 
 ## Target identity
 
-The UI may use the executable root for display, but the privileged helper must not trust a drive letter alone. Drive letters can change. Before mutation it should bind the operation to stable volume metadata and re-check that the FlashLock executable/config live on the same target volume.
+The target is never chosen from a user-entered arbitrary path. The UI derives the root from `FlashLock.exe`, and the elevated helper repeats the same check against `FlashLock.Elevated.exe`.
 
-## Protection profile
+Operations are also bound to the NTFS volume serial number captured by `GetVolumeInformationW`. A drive-letter change does not invalidate the volume identity; a different/reformatted volume does.
 
-The v1 ACL profile intentionally avoids explicit `Deny` ACEs where possible. A minimal allow-list DACL is easier to reason about:
+## Snapshot and mutation algorithm
 
-- SYSTEM: Full Control
-- Administrators: Full Control
-- Everyone: Read & Execute
+Protection is intentionally transactional in spirit:
 
-The final implementation must be validated on the volume root because root-directory semantics differ from an ordinary child folder.
+1. Validate target and PIN/state.
+2. Persist state `Applying`.
+3. Enumerate user files/directories while refusing reparse points.
+4. Capture the **Access** portion of every DACL as SDDL into `.flashlock\acl-snapshot.jsonl`.
+5. Flush and atomically publish the completed snapshot.
+6. Apply the protected allow-list ACL deepest-first, root last.
+7. Apply protected ACLs to FlashLock metadata.
+8. Read back every protected user ACL and verify no unexpected principal/write capability remains.
+9. Persist state `Protected`.
 
-## Recovery design
+If steps 4-8 fail, FlashLock attempts an immediate restore from the snapshot. If rollback itself fails, state becomes `RecoveryRequired` and the snapshot remains available.
 
-Before changing a drive root DACL, FlashLock stores the original SDDL/security descriptor in `.flashlock` and verifies it can be parsed. Unlock restores exactly that descriptor.
+## Protected ACL profile
 
-A future standalone `FlashLock.Recovery.exe` can repair a drive if the UI/config state is inconsistent.
+Each protected object has ACL inheritance disabled and explicit allow rules only:
+
+- `SYSTEM`: Full Control
+- `BUILTIN\Administrators`: Full Control
+- `Everyone`: Read & Execute
+
+There are no explicit Deny ACEs. This makes recovery more predictable and lets the elevated helper retain control.
+
+## Unlock / recovery
+
+1. Validate target and owner PIN.
+2. Persist state `Restoring`.
+3. Load the snapshot.
+4. Restore DACLs deepest-first and the root last.
+5. Read back each DACL and compare it to its saved SDDL.
+6. Persist state `Unlocked`.
+7. Delete the now-obsolete snapshot on best effort.
+
+The `.flashlock` metadata directory intentionally retains its restricted app-owned ACL after unlock so a normal borrower cannot edit the PIN verifier or state file. User data ACLs are restored exactly.
+
+## Recovery independence
+
+`tools/Manual-Recover-Acl.ps1` provides an Administrator-only escape hatch that reads the same JSONL snapshot and restores saved DACLs without depending on the WPF application or helper binary.

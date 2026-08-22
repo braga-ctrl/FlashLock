@@ -1,78 +1,92 @@
-# Initial Backlog
+# v0.1 Backlog / Status
 
 ## FL-001 — Establish Windows build baseline
 
-- .NET 10 solution builds on Windows.
-- GitHub Actions build is green.
-- WPF app launches.
+**Implementation:** complete. **Validation:** pending/CI gate.
+
+- .NET 10 solution includes Core, WPF App, Elevated helper and xUnit tests.
+- GitHub Actions builds/tests on `windows-latest`.
 
 ## FL-002 — Validate disposable-folder ACL profile
 
-- Read and copy-out work from a non-elevated token.
-- Create/modify/rename/delete fail.
-- Elevated cleanup/recovery works.
-- Results documented on two Windows PCs.
+**Implementation:** complete. **Manual validation:** required on Windows.
+
+- `tools/Test-AclProtection.ps1` self-elevates, applies the proposed ACL only to a disposable temp folder, and cleans up afterward.
 
 ## FL-003 — USB identity and safety guardrails
 
-- Identify the physical/volume identity containing FlashLock.
-- Never mutate the system volume.
-- Detect filesystem and reject FAT32/exFAT.
-- Detect ambiguous/multi-volume cases and fail safely.
+**Implemented.**
+
+- target must be the drive containing the helper executable
+- system drive is refused
+- NTFS required; FAT32/exFAT refused
+- volume serial bound to each request/config
+- reparse points refused in protected user content
 
 ## FL-004 — Protected root ACL engine
 
-- Capture original root security descriptor.
-- Apply protected DACL to a dedicated empty test USB.
-- Read back and verify postcondition.
-- Roll back automatically on failure.
+**Implemented; dedicated-test-USB validation pending.**
+
+- complete user-data DACL snapshot before mutation
+- protected ACL applied deepest-first/root-last
+- protected ACL read-back verification
+- automatic rollback on failure
 
 ## FL-005 — Unlock / exact ACL restore
 
-- Restore the saved original security descriptor.
-- Verify write access after restore.
-- Preserve backup until verification succeeds.
+**Implemented; hardware validation pending.**
+
+- saved DACLs restored deepest-first/root-last
+- restored SDDL read back and verified
+- Recovery Required state retained on failure
 
 ## FL-006 — First-run owner PIN
 
-- Owner creates PIN/passphrase.
-- Salted PBKDF2 verifier stored in `.flashlock`.
-- Unlock rejects invalid PIN.
-- No plaintext PIN reaches logs or command-line arguments.
+**Implemented.**
+
+- PBKDF2-HMAC-SHA256, random salt, 600,000 iterations
+- no plaintext PIN stored or placed on process command line
+- five failed attempts trigger a short lockout
 
 ## FL-007 — Privileged helper
 
-- UI remains unelevated.
-- Protect/unlock invoke a minimal UAC helper.
-- Helper independently revalidates target volume.
+**Implemented.**
+
+- WPF UI stays unelevated
+- UAC helper has `requireAdministrator`
+- random named pipe carries the in-memory request
+- helper independently validates target drive and serial
 
 ## FL-008 — Protection-state UX
 
-- Clear Protected / Unlocked / Unsupported / Recovery Required states.
-- Show drive label, root, filesystem and size.
-- Confirmation before protection transition.
+**Implemented.**
+
+- Not Configured / Unlocked / Protected / Recovery Needed / Unsupported
+- drive label, root, filesystem, size and volume ID
+- PIN creation/entry and recovery flow
 
 ## FL-009 — Cross-machine USB validation matrix
 
-- At least two Windows 11 PCs.
-- At least two flash drives/controllers.
-- Unplug/replug testing.
-- Borrower scenario recorded as demo evidence.
+**Tooling implemented; physical validation pending.**
+
+- `tools/Validate-FlashLock.ps1`
+- required: two PCs, two USB devices, unplug/replug cycles
 
 ## FL-010 — Portable publish
 
-- Self-contained win-x64 publish.
-- Single launchable package suitable for copying onto the USB.
-- No machine-wide install required.
+**Implemented.**
+
+- self-contained `win-x64` publish for App and Elevated helper
+- Actions workflow assembles `FlashLock-win-x64.zip`
 
 ## FL-011 — Recovery utility
 
-- Standalone repair path for inconsistent ACL/config state.
-- Requires UAC.
-- Cannot target the system volume.
+**Implemented.**
 
-## FL-012 — Portfolio demo and release
+- UI Recovery action
+- standalone `tools/Manual-Recover-Acl.ps1`
+- system-drive refusal
 
-- README screenshots/GIF.
-- Threat-model limitations clearly documented.
-- v0.1 release artifact.
+## FL-012 — Portfolio demo and v0.1 release
+
+**Pending hardware validation and screenshots/demo capture.**

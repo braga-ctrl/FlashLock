@@ -6,6 +6,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashLock.Core", "src\Flash
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashLock.App", "src\FlashLock.App\FlashLock.App.csproj", "{298CC16B-75D6-499E-8EA9-49BA51EC5CE4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashLock.Elevated", "src\FlashLock.Elevated\FlashLock.Elevated.csproj", "{4A5A4350-DB1D-4414-A72C-72B825105DCB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FlashLock.Core.Tests", "tests\FlashLock.Core.Tests\FlashLock.Core.Tests.csproj", "{67F03A62-D3EC-4F00-8837-10DA3CF08CB7}"
+EndProject
 Global
     GlobalSection(SolutionConfigurationPlatforms) = preSolution
         Debug|Any CPU = Debug|Any CPU
@@ -20,5 +24,13 @@ Global
         {298CC16B-75D6-499E-8EA9-49BA51EC5CE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
         {298CC16B-75D6-499E-8EA9-49BA51EC5CE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
         {298CC16B-75D6-499E-8EA9-49BA51EC5CE4}.Release|Any CPU.Build.0 = Release|Any CPU
+        {4A5A4350-DB1D-4414-A72C-72B825105DCB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {4A5A4350-DB1D-4414-A72C-72B825105DCB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {4A5A4350-DB1D-4414-A72C-72B825105DCB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {4A5A4350-DB1D-4414-A72C-72B825105DCB}.Release|Any CPU.Build.0 = Release|Any CPU
+        {67F03A62-D3EC-4F00-8837-10DA3CF08CB7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+        {67F03A62-D3EC-4F00-8837-10DA3CF08CB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+        {67F03A62-D3EC-4F00-8837-10DA3CF08CB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+        {67F03A62-D3EC-4F00-8837-10DA3CF08CB7}.Release|Any CPU.Build.0 = Release|Any CPU
     EndGlobalSection
 EndGlobal

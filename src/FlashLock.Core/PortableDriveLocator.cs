@@ -25,6 +25,7 @@ public sealed class PortableDriveLocator
             drive.DriveType,
             string.IsNullOrWhiteSpace(drive.VolumeLabel) ? null : drive.VolumeLabel,
             drive.TotalSize,
-            drive.AvailableFreeSpace);
+            drive.AvailableFreeSpace,
+            VolumeIdentityProvider.GetSerialNumber(root));
     }
 }
