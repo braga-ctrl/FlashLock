@@ -85,15 +85,22 @@ public sealed class ElevatedHelperClient
         }
 
         var configuration = IsDebugBuild ? "Debug" : "Release";
-        var candidate = Path.GetFullPath(Path.Combine(
+        var helperBin = Path.GetFullPath(Path.Combine(
             baseDirectory,
             "..", "..", "..", "..",
-            "FlashLock.Elevated", "bin", configuration,
-            "net10.0-windows10.0.19041.0", "FlashLock.Elevated.exe"));
+            "FlashLock.Elevated", "bin", configuration));
 
-        if (File.Exists(candidate))
+        if (Directory.Exists(helperBin))
         {
-            return candidate;
+            var candidate = Directory
+                .EnumerateFiles(helperBin, "FlashLock.Elevated.exe", SearchOption.AllDirectories)
+                .OrderBy(static path => path.Length)
+                .FirstOrDefault();
+
+            if (candidate is not null)
+            {
+                return candidate;
+            }
         }
 
         throw new FileNotFoundException(
