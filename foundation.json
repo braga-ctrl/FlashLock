@@ -1,0 +1,15 @@
+{
+  "project": "FlashLock",
+  "phase": "sprint-0-feasibility",
+  "platform": "Windows 10/11",
+  "runtime": ".NET 10",
+  "ui": "WPF",
+  "primaryProtection": "NTFS DACL",
+  "filesystemRequirement": "NTFS",
+  "threatModel": "accidental deletion and normal unelevated modification",
+  "adminBypassInScope": false,
+  "internetRequired": false,
+  "portable": true,
+  "rootMutationEnabled": false,
+  "nextIssue": "FL-001"
+}

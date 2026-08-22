@@ -1,0 +1,15 @@
+.vs/
+.vscode/
+.idea/
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.pfx
+*.snk
+.env
+.flashlock/
